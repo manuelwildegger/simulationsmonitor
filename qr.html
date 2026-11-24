@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>QR-Code Simulationsmonitor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="icon-192.png" type="image/png">
+<style>
+  :root { --ink: #15181d; --dim: #5b6470; --line: #d9dde3; --acc: #2558ae; --bg: #f4f5f7; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main {
+    max-width: 760px; margin: 28px auto; padding: 36px 40px 30px; background: #fff;
+    border: 1px solid var(--line); border-radius: 14px;
+  }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 4px; letter-spacing: -.01em; }
+  .sub { margin: 0 0 26px; color: var(--dim); font-size: 17px; }
+  .wrap { display: flex; gap: 34px; align-items: center; }
+  #qr { flex: 0 0 auto; width: 300px; height: 300px; }
+  #qr svg { width: 100%; height: 100%; display: block; }
+  #qr .empty {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 24px; border: 2px dashed var(--line); border-radius: 10px;
+    color: var(--dim); font-size: 14px;
+  }
+  ol { margin: 0; padding-left: 22px; }
+  ol li { margin: 0 0 12px; }
+  ol b { display: block; }
+  ol span { color: var(--dim); font-size: 14.5px; }
+  .url {
+    margin: 22px 0 0; padding: 10px 14px; border-radius: 8px; background: var(--bg);
+    font: 600 17px/1.3 ui-monospace, "SF Mono", Menlo, Consolas, monospace; word-break: break-all;
+  }
+  .tools {
+    max-width: 760px; margin: 0 auto 40px; padding: 0 4px;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  }
+  .tools label { font-size: 14px; color: var(--dim); flex: 1 1 100%; }
+  .tools input {
+    flex: 1 1 320px; min-width: 0; padding: 10px 12px; font: inherit; font-size: 15px;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink);
+  }
+  .tools button {
+    padding: 10px 18px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+    border: 0; border-radius: 8px; background: var(--acc); color: #fff;
+  }
+  .tools button.sec { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  #localNote { display: none; margin: 0 0 8px; font-size: 14px; color: #8a4b00; flex: 1 1 100%; }
+  @media (max-width: 640px) {
+    main { margin: 16px; padding: 24px 20px; }
+    .wrap { flex-direction: column; align-items: stretch; }
+    #qr { width: 100%; height: auto; aspect-ratio: 1; max-width: 320px; margin: 0 auto; }
+    h1 { font-size: 25px; }
+  }
+  @media print {
+    @page { size: A4; margin: 18mm; }
+    body { background: #fff; }
+    main { border: 0; margin: 0; padding: 0; max-width: none; }
+    .tools { display: none; }
+    h1 { font-size: 34px; }
+    .wrap { flex-direction: column; align-items: center; gap: 26px; }
+    #qr { width: 105mm; height: 105mm; }
+    ol { max-width: 150mm; font-size: 17px; }
+    .url { text-align: center; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Simulationsmonitor</h1>
+  <p class="sub">Patientenmonitor zum Üben – am Handy im Querformat</p>
+  <div class="wrap">
+    <div id="qr"><div class="empty">Unten die Online-Adresse eintragen – dann erscheint hier der QR-Code.</div></div>
+    <ol>
+      <li><b>Code mit der Handykamera scannen</b><span>und den Link öffnen.</span></li>
+      <li><b>Handy quer halten</b><span>Der Monitor läuft sofort los.</span></li>
+      <li><b>„Steuerung“ unten links</b><span>Szenarien, Rhythmen, Medikamente, Defi, Labor.</span></li>
+      <li><b>Tipp: zum Home-Bildschirm hinzufügen</b><span>iPhone: Teilen → „Zum Home-Bildschirm“. Android: Menü ⋮ → „Zum Startbildschirm“. Dann bildschirmfüllend wie eine App.</span></li>
+    </ol>
+  </div>
+  <div class="url" id="urlText">–</div>
+</main>
+
+<div class="tools">
+  <p id="localNote">Diese Seite ist gerade nur lokal geöffnet – ein Handy erreicht diese Adresse nicht. Bitte die GitHub-Pages-Adresse eintragen.</p>
+  <label for="urlIn">Adresse im QR-Code</label>
+  <input id="urlIn" type="url" placeholder="https://name.github.io/simulationsmonitor/" spellcheck="false">
+  <button id="btnMake" class="sec">Übernehmen</button>
+  <button id="btnPrint">Drucken</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var box = document.getElementById('qr'), inp = document.getElementById('urlIn');
+
+  /* Startadresse: Ordner dieser Seite. index.html leitet Handys selbst zur
+     Handy-Fassung weiter, darum reicht die kurze Adresse. */
+  function own() {
+    var u = new URL('./', location.href);
+    return u.href;
+  }
+  function isLocal(u) {
+    return /^file:/.test(u) || /\/\/(localhost|127\.0\.0\.1|\[::1\])[:\/]/.test(u);
+  }
+
+  function render(url) {
+    document.getElementById('urlText').textContent = url || '–';
+    if (!url) return;
+    if (typeof qrcode !== 'function') {
+      box.innerHTML = '<div class="empty">QR-Code konnte nicht geladen werden – ist das Gerät online?</div>';
+      return;
+    }
+    var q = qrcode(0, 'M');
+    q.addData(url);
+    q.make();
+    box.innerHTML = q.createSvgTag({ cellSize: 8, margin: 2, scalable: true });
+    var s = box.querySelector('svg');
+    if (s) s.setAttribute('aria-label', 'QR-Code: ' + url);
+  }
+
+  var param = new URLSearchParams(location.search).get('url');
+  var start = param || own();
+  if (!param && isLocal(start)) {
+    document.getElementById('localNote').style.display = 'block';
+    start = '';
+  }
+  inp.value = start;
+  render(start);
+
+  function take() {
+    var v = inp.value.trim();
+    if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v;
+    inp.value = v;
+    render(v);
+  }
+  document.getElementById('btnMake').onclick = take;
+  inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') take(); });
+  document.getElementById('btnPrint').onclick = function () { take(); window.print(); };
+})();
+</script>
+</body>
+</html>

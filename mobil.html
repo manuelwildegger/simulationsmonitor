@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Simulationsmonitor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Simulator">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="style.css?v=202611242213">
+<link rel="stylesheet" href="mobil.css?v=202611242213">
+</head>
+<!-- Handy-Fassung: Monitor im Querformat, die Steuerung klappt von rechts
+     herein (index.html?embed=1 als Rahmen). -->
+<body class="monitorpage mobile">
+<div id="device">
+  <div id="screen">
+    <div id="mhead">
+      <span class="pat" id="pat">–</span>
+      <span class="meta" id="meta">–</span>
+      <span class="spacer"></span>
+      <span class="meta num" id="clock">--:--:--</span>
+    </div>
+
+    <div id="alarmbar"><span style="opacity:.5">keine Alarme</span></div>
+
+    <div id="mbody">
+      <div id="waves">
+        <canvas id="cv"></canvas>
+        <div id="rhystat"><div id="rs-rhythm"></div><div id="rs-ect"></div></div>
+        <canvas id="draw"></canvas>
+        <div id="frozenTag" style="display:none">STANDBILD</div>
+        <div id="drawbar" style="display:none">
+          <span class="dlab">Bild angehalten – hineinmalen:</span>
+          <button class="dk on" data-tool="pen">Stift</button>
+          <button class="dk" data-tool="erase">Radierer</button>
+          <span class="dsep"></span>
+          <button class="sw on" data-col="#ffd23f" style="--sw:#ffd23f" title="gelb"></button>
+          <button class="sw" data-col="#ff3b30" style="--sw:#ff3b30" title="rot"></button>
+          <button class="sw" data-col="#3ce06a" style="--sw:#3ce06a" title="grün"></button>
+          <button class="sw" data-col="#ffffff" style="--sw:#ffffff" title="weiß"></button>
+          <span class="dsep"></span>
+          <button class="dk" id="dkClear">alles löschen</button>
+        </div>
+        <div id="noconn">Simulator wird geladen …</div>
+      </div>
+      <div id="nums">
+        <div class="tile" id="t-hr">
+          <div class="tl"><span class="lab">HF</span><span class="unit">/min</span><span class="lim" id="l-hr"></span></div>
+          <div class="val num" id="v-hr">--</div>
+          <div class="sub" id="s-hr"></div>
+        </div>
+        <div class="tile" id="t-spo2">
+          <div class="tl"><span class="lab">SpO₂</span><span class="unit">%</span><span class="lim" id="l-spo2"></span></div>
+          <div class="val num" id="v-spo2">--</div>
+          <div class="sub" id="s-spo2">Pleth</div>
+        </div>
+        <div class="tile" id="t-art">
+          <div class="tl"><span class="lab">ABP</span><span class="unit">mmHg</span><span class="lim" id="l-art"></span></div>
+          <div class="val num small" id="v-art">--/-- (--)</div>
+          <div class="sub" id="s-art">invasiv</div>
+        </div>
+        <div class="tile" id="t-cvp">
+          <div class="tl"><span class="lab">ZVD</span><span class="unit">mmHg</span><span class="lim" id="l-cvp"></span></div>
+          <div class="val num" id="v-cvp">--</div>
+          <div class="sub">Mittelwert</div>
+        </div>
+        <div class="tile" id="t-temp">
+          <div class="tl"><span class="lab">Temp</span><span class="unit">°C</span><span class="lim" id="l-temp"></span></div>
+          <div class="val num" id="v-temp">--</div>
+          <div class="sub">Blase</div>
+        </div>
+        <div class="tile" id="t-af">
+          <div class="tl"><span class="lab">AF</span><span class="unit">/min</span></div>
+          <div class="val num" id="v-af">--</div>
+          <div class="sub">Impedanz</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="medbar" style="display:none">
+      <span class="mbhead" id="mbIcon">Therapie</span>
+      <span class="mbitems" id="medItems"></span>
+    </div>
+
+    <div id="softkeys">
+      <button class="sk ctl" id="skCtl">Steuerung<br>öffnen</button>
+      <button class="sk" id="skFreeze">Standbild<br><span id="skFreezeVal">einfrieren</span></button>
+      <button class="sk" id="skBga">BGA<br>abnehmen</button>
+      <button class="sk" id="skDefi">Defi<br>corpuls1</button>
+      <button class="sk" id="skPacer">Schritt&shy;macher<br>PACE 203H</button>
+      <button class="sk" id="skEkg">12-Kanal<br>EKG</button>
+      <button class="sk" id="skSweep">Ablenkung<br><span id="skSweepVal">6 s</span></button>
+      <button class="sk" id="skSound">Ton<br><span id="skSoundVal">aus</span></button>
+      <button class="sk" id="skFs">Voll&shy;bild</button>
+    </div>
+  </div>
+</div>
+
+<div id="devOverlay"></div>
+
+<div id="bgaOverlay">
+  <div class="bgaSheet">
+    <div class="paper" id="bgaPaper"></div>
+    <div class="bgaBtns">
+      <button id="bgaPrint">Drucken</button>
+      <button id="bgaClose">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Steuerung: klappt von rechts herein -->
+<div id="scrim"></div>
+<aside id="drawer" aria-hidden="true">
+  <div id="drawerHead">
+    <b>Steuerung</b>
+    <button id="drawerClose" aria-label="Steuerung schließen">Schließen ✕</button>
+  </div>
+  <div id="drawerBody"></div>
+</aside>
+<!-- Griff am rechten Rand, solange ein Gerät, das EKG oder die BGA offen ist -->
+<button id="ctlHandle" aria-label="Steuerung öffnen"><span>Steuerung</span></button>
+
+<div id="tip" role="status">
+  <span id="tipText"></span>
+  <button id="tipClose" aria-label="Hinweis schließen">OK</button>
+</div>
+
+<div id="rotateHint">
+  <svg viewBox="0 0 120 120" width="96" height="96" aria-hidden="true">
+    <g class="phone"><rect x="38" y="14" width="44" height="92" rx="8" fill="none" stroke="currentColor" stroke-width="5"/>
+      <circle cx="60" cy="96" r="3.5" fill="currentColor"/></g>
+  </svg>
+  <p><b>Bitte das Handy quer halten.</b><br>Der Monitor ist für das Querformat gebaut.</p>
+  <p class="small">Bleibt das Bild hochkant, die Bildschirmausrichtungs-Sperre im Kontrollzentrum lösen.</p>
+</div>
+
+<script src="engine.js?v=202611242213"></script>
+<script src="bga.js?v=202611242213"></script>
+<script src="devices.js?v=202611242213"></script>
+<script src="ekgkrit.js?v=202611242213"></script>
+<script src="ekg12.js?v=202611242213"></script>
+<script src="monitor.js?v=202611242213"></script>
+<script src="mobil.js?v=202611242213"></script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Simulationssteuerung</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+/* Am Handy (Touch, kleiner Bildschirm) gleich zur Handy-Fassung – so reicht
+   im QR-Code die kurze Startadresse. ?desktop erzwingt diese Seite. */
+(function () {
+  try {
+    if (window.top !== window.self || /[?&]desktop\b/.test(location.search)) return;
+    if (matchMedia('(pointer: coarse)').matches &&
+        Math.min(screen.width, screen.height) < 600) location.replace('mobil.html');
+  } catch (e) {}
+})();
+</script>
+<link rel="stylesheet" href="style.css?v=202611242213">
+<link rel="stylesheet" href="mobil.css?v=202611242213">
+</head>
+<body>
+<div id="control">
+  <div id="chead">
+    <h1>Simulationssteuerung</h1>
+    <button class="b" id="btnOpen">Monitorfenster öffnen</button>
+    <button class="b" id="btnFreeze" title="Taste P">Standbild</button>
+    <button class="b" id="btnDefi">Defi corpuls1</button>
+    <button class="b" id="btnPacer">Schrittmacher PACE 203H</button>
+    <button class="b" id="btnEkg" title="Taste E – schreibt zehn Sekunden in zwölf Ableitungen">12-Kanal-EKG</button>
+    <span id="link">nicht verbunden</span>
+    <span id="build" title="Dateistand – zeigt das Fenster eine aeltere Fassung, hilft Neuladen mit Umschalt+Neu laden">Stand 29.11.2026</span>
+    <span class="spacer"></span>
+    <span style="font-size:12px;color:var(--dim)">Übergang</span>
+    <span class="btnrow" id="transRow"></span>
+  </div>
+
+  <div id="cbody">
+    <div id="cleft">
+      <h2 class="sec">Szenarien <span>ein Klick setzt Rhythmus, Druck, Sättigung und Labor</span></h2>
+      <div id="presetRow"></div>
+
+      <h2 class="sec">Artefakte</h2>
+      <div class="btnrow" id="artRow"></div>
+
+      <h2 class="sec">EKG-Form (Ischämie, Elektrolyte)</h2>
+      <div class="btnrow" id="twRow"></div>
+      <div class="lbl" style="margin-top:10px">Erregungsleitung – Schenkel- und Faszikelblöcke</div>
+      <div class="btnrow" id="blockRow"></div>
+
+      <h2 class="sec">Medikamente – Etiketten nach ISO 26825 / DIVI</h2>
+      <div id="medBox"></div>
+      <div id="medGivenWrap">
+        <div class="lbl">Gegeben <span>ohne Halbwertszeit – die Wirkung bleibt stehen</span>
+          <button class="b" id="btnMedConv" title="Schlägt der Rhythmus nach der Gabe um?">Rhythmusumschlag</button>
+          <button class="b" id="btnMedClear">Liste leeren</button></div>
+        <div id="medGiven"></div>
+      </div>
+
+      <h2 class="sec">Defibrillation und Kardioversion</h2>
+      <div class="defi">
+        <div class="lbl">Betriebsart</div>
+        <div class="btnrow" id="defiMode"></div>
+        <div class="lbl">Energie</div>
+        <div class="btnrow" id="defiEnergy"></div>
+        <div class="lbl">Ergebnis nach dem Schock</div>
+        <div class="btnrow" id="defiOutcome"></div>
+        <div class="btnrow" style="margin-top:10px">
+          <button class="b shock" id="btnShock" title="Taste D">Schock abgeben</button>
+        </div>
+        <div id="cprCycle" style="display:none">
+          Thoraxkompressionen laufen – Rhythmuskontrolle in <b class="num" id="cprCycleT">2:00</b>
+          <button class="b" id="btnRhythmCheck" title="Zyklus vorzeitig beenden">Rhythmuskontrolle jetzt</button>
+        </div>
+        <p class="hint">Läuft die Reanimation, heißt es beim Schock erst „Alle weg!“: Die Kompressionen
+           stoppen, der Druck fällt ab, dann fällt der Schock – und danach wird zwei Minuten
+           weitergedrückt, bevor der Rhythmus beurteilt wird.</p>
+      </div>
+
+      <details id="rhythmDet">
+        <summary class="sec">Nur der Herzrhythmus <span id="rhythmNow">Sinusrhythmus</span></summary>
+        <p class="hint">Ändert allein den Rhythmus. Druck, Sättigung und Labor bleiben stehen,
+           wie sie sind – für den vollständigen Fall das Szenario oben nehmen.</p>
+        <div id="rhythmBox"></div>
+      </details>
+
+      <h2 class="sec">Anzeige</h2>
+      <div class="btnrow" id="showRow"></div>
+      <div class="btnrow" style="margin-top:6px" id="sweepRow"></div>
+    </div>
+
+    <div id="cright">
+      <h2 class="sec">Vorschau &amp; Istwerte</h2>
+      <canvas id="preview"></canvas>
+      <div id="live">
+        <div><div class="k">HF</div><div class="n num" id="lv-hr" style="color:var(--ecg)">--</div></div>
+        <div><div class="k">SpO₂</div><div class="n num" id="lv-spo2" style="color:var(--spo2)">--</div></div>
+        <div><div class="k">ABP</div><div class="n num" id="lv-art" style="color:var(--art);font-size:15px">--</div></div>
+        <div><div class="k">AF</div><div class="n num" id="lv-af" style="color:var(--af)">--</div></div>
+        <div><div class="k">ZVD</div><div class="n num" id="lv-cvp" style="color:var(--cvp)">--</div></div>
+        <div><div class="k">Temp</div><div class="n num" id="lv-temp" style="color:var(--temp)">--</div></div>
+      </div>
+      <div id="lvstat">–</div>
+      <div id="decompNote" style="display:none"></div>
+      <div class="btnrow" style="margin-top:6px">
+        <button class="b active" id="btnDecomp"
+          title="Kalium ab 8,0 mmol/l führt zu Kammerflimmern, ein systolischer Druck unter 50 mmHg zur Asystolie">Kritische Werte entgleisen</button>
+      </div>
+
+      <h2 class="sec">Parameter</h2>
+      <div id="sliders"></div>
+
+      <h2 class="sec">Labor / BGA</h2>
+      <div class="btnrow" style="margin-bottom:4px">
+        <button class="b" id="btnBga">BGA abnehmen <span style="opacity:.4;font-size:11px">B</span></button>
+        <button class="b active" id="btnLacAuto">Laktat automatisch</button>
+        <select class="b" id="probentyp">
+          <option>Arteriell</option>
+          <option>Venös</option>
+          <option>Kapillär</option>
+        </select>
+      </div>
+      <div id="labSliders"></div>
+
+      <h2 class="sec">Patient</h2>
+      <div class="btnrow">
+        <input class="b" id="pName" value="Mustermann, Max" style="flex:1 1 150px;background:#1b2029;color:var(--txt);border:1px solid #262c36;border-radius:7px;padding:8px 10px">
+        <input class="b" id="pAge" value="64 J." style="width:80px;background:#1b2029;color:var(--txt);border:1px solid #262c36;border-radius:7px;padding:8px 10px">
+        <input class="b" id="pBed" value="ICU 03" style="width:92px;background:#1b2029;color:var(--txt);border:1px solid #262c36;border-radius:7px;padding:8px 10px">
+      </div>
+
+      <h2 class="sec">Protokoll</h2>
+      <div id="log"></div>
+    </div>
+  </div>
+</div>
+<div id="devOverlay"></div>
+<div id="bgaOverlay">
+  <div class="bgaSheet">
+    <div class="paper" id="bgaPaper"></div>
+    <div class="bgaBtns">
+      <button id="bgaPrint">Drucken</button>
+      <button id="bgaClose">Schließen</button>
+    </div>
+  </div>
+</div>
+<script src="engine.js?v=202611242213"></script>
+<script src="bga.js?v=202611242213"></script>
+<script src="devices.js?v=202611242213"></script>
+<script src="ekgkrit.js?v=202611242213"></script>
+<script src="ekg12.js?v=202611242213"></script>
+<script src="control.js?v=202611242213"></script>
+<script src="mobil-steuerung.js?v=202611242213"></script>
+</body>
+</html>

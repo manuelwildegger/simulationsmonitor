@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Patientenmonitor</title>
+<link rel="stylesheet" href="style.css?v=202611242213">
+</head>
+<body class="monitorpage">
+<div id="device">
+  <div id="bezelTop"><span id="model">Patientenmonitor</span></div>
+
+  <div id="screen">
+    <div id="mhead">
+      <span class="pat" id="pat">–</span>
+      <span class="meta" id="meta">–</span>
+      <span class="sep"></span>
+      <span class="meta">Erwachsen</span>
+      <span class="spacer"></span>
+      <span class="meta num" id="clock">--:--:--</span>
+      <span class="sep"></span>
+      <span class="meta">Profil: ICU</span>
+    </div>
+
+    <div id="alarmbar"><span style="opacity:.5">keine Alarme</span></div>
+
+    <div id="mbody">
+      <div id="waves">
+        <canvas id="cv"></canvas>
+        <div id="rhystat"><div id="rs-rhythm"></div><div id="rs-ect"></div></div>
+        <canvas id="draw"></canvas>
+        <div id="frozenTag" style="display:none">STANDBILD</div>
+        <div id="drawbar" style="display:none">
+          <span class="dlab">Bild angehalten – hineinmalen:</span>
+          <button class="dk on" data-tool="pen">Stift</button>
+          <button class="dk" data-tool="erase">Radierer</button>
+          <span class="dsep"></span>
+          <button class="sw on" data-col="#ffd23f" style="--sw:#ffd23f" title="gelb"></button>
+          <button class="sw" data-col="#ff3b30" style="--sw:#ff3b30" title="rot"></button>
+          <button class="sw" data-col="#3ce06a" style="--sw:#3ce06a" title="grün"></button>
+          <button class="sw" data-col="#ffffff" style="--sw:#ffffff" title="weiß"></button>
+          <span class="dsep"></span>
+          <button class="dk" id="dkClear">alles löschen</button>
+        </div>
+        <div id="noconn">Kein Steuerfenster verbunden.<br>Dieses Fenster aus der Steuerung heraus öffnen.</div>
+      </div>
+      <div id="nums">
+        <div class="tile" id="t-hr">
+          <div class="tl"><span class="lab">HF</span><span class="unit">/min</span><span class="lim" id="l-hr"></span></div>
+          <div class="val num" id="v-hr">--</div>
+          <div class="sub" id="s-hr"></div>
+        </div>
+        <div class="tile" id="t-spo2">
+          <div class="tl"><span class="lab">SpO₂</span><span class="unit">%</span><span class="lim" id="l-spo2"></span></div>
+          <div class="val num" id="v-spo2">--</div>
+          <div class="sub" id="s-spo2">Pleth</div>
+        </div>
+        <div class="tile" id="t-art">
+          <div class="tl"><span class="lab">ABP</span><span class="unit">mmHg</span><span class="lim" id="l-art"></span></div>
+          <div class="val num small" id="v-art">--/-- (--)</div>
+          <div class="sub" id="s-art">invasiv</div>
+        </div>
+        <div class="tile" id="t-cvp">
+          <div class="tl"><span class="lab">ZVD</span><span class="unit">mmHg</span><span class="lim" id="l-cvp"></span></div>
+          <div class="val num" id="v-cvp">--</div>
+          <div class="sub">Mittelwert</div>
+        </div>
+        <div class="tile" id="t-temp">
+          <div class="tl"><span class="lab">Temp</span><span class="unit">°C</span><span class="lim" id="l-temp"></span></div>
+          <div class="val num" id="v-temp">--</div>
+          <div class="sub">Blase</div>
+        </div>
+        <div class="tile" id="t-af">
+          <div class="tl"><span class="lab">AF</span><span class="unit">/min</span></div>
+          <div class="val num" id="v-af">--</div>
+          <div class="sub">Impedanz</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="medbar" style="display:none">
+      <span class="mbhead" id="mbIcon">Therapie</span>
+      <span class="mbitems" id="medItems"></span>
+    </div>
+
+    <div id="softkeys">
+      <button class="sk" id="skFreeze">Standbild<br><span id="skFreezeVal">einfrieren</span></button>
+      <button class="sk" id="skBga">BGA<br>abnehmen</button>
+      <button class="sk" id="skDefi">Defi<br>corpuls1</button>
+      <button class="sk" id="skPacer">Schrittmacher<br>PACE 203H</button>
+      <button class="sk" id="skEkg">12-Kanal<br>EKG</button>
+      <button class="sk" id="skSweep">Ablenkung<br><span id="skSweepVal">6 s</span></button>
+      <button class="sk" id="skSound">Ton<br><span id="skSoundVal">aus</span></button>
+      <button class="sk" id="skFs">Vollbild</button>
+    </div>
+  </div>
+
+  <div id="bezelBottom"><span class="brand">SIMULATION</span></div>
+</div>
+
+<div id="devOverlay"></div>
+
+<div id="bgaOverlay">
+  <div class="bgaSheet">
+    <div class="paper" id="bgaPaper"></div>
+    <div class="bgaBtns">
+      <button id="bgaPrint">Drucken</button>
+      <button id="bgaClose">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<script src="engine.js?v=202611242213"></script>
+<script src="bga.js?v=202611242213"></script>
+<script src="devices.js?v=202611242213"></script>
+<script src="ekgkrit.js?v=202611242213"></script>
+<script src="ekg12.js?v=202611242213"></script>
+<script src="monitor.js?v=202611242213"></script>
+</body>
+</html>

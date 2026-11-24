@@ -1,0 +1,580 @@
+/* Gemeinsames Styling für Monitor- und Steuerfenster */
+:root {
+  --bg: #000;
+  --panel: #14171c;
+  --panel2: #1c2027;
+  --line: #2a2f38;
+  --txt: #e8ecf2;
+  --dim: #8b94a3;
+  --ecg: #e8ecf2;        /* Hausstandard: EKG weißgrau */
+  --spo2: #ff6fb5;       /* SpO2 rosa */
+  --art: #ff4d4d;
+  --cvp: #36d5e0;        /* ZVD blau */
+  --af: #b9c2d0;
+  --temp: #3ce06a;       /* Temperatur gruen */
+  --warn: #ffd23f;
+  --crit: #ff3b30;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+.num { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+/* ---------------- Monitor: Gehäuse im Stil IntelliVue MX550 ---------------- */
+
+body.monitorpage { background: #0a0a0b; }
+
+#device {
+  height: 100%; display: flex; flex-direction: column;
+  background: linear-gradient(#34373b 0%, #26292d 6%, #1b1d20 60%, #121315 100%);
+  padding: 22px 18px 0;
+}
+#bezelTop {
+  flex: 0 0 auto; display: flex; justify-content: flex-end; align-items: center;
+  padding: 0 6px 7px;
+}
+#model { font-size: 11px; letter-spacing: .06em; color: #9aa0a8; }
+#bezelBottom {
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+  height: 46px;
+}
+#bezelBottom .brand {
+  font-size: 17px; font-weight: 600; letter-spacing: .34em;
+  color: #eef0f3; text-indent: .34em;
+}
+
+#screen {
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+  background: #000; border-radius: 3px; overflow: hidden;
+  box-shadow: 0 0 0 1px #000, 0 0 0 4px #0d0e10, 0 10px 26px rgba(0,0,0,.6);
+}
+
+/* helle Kopfleiste wie beim IntelliVue */
+#mhead {
+  display: flex; align-items: center; gap: 12px;
+  padding: 4px 12px; background: linear-gradient(#e2e5e9, #c9ced4);
+  color: #14171c; border-bottom: 1px solid #8e949b;
+  font-size: 12px; flex: 0 0 auto;
+}
+#mhead .pat { font-weight: 700; }
+#mhead .meta { color: #3d434b; }
+#mhead .sep { width: 1px; height: 13px; background: #9aa1a9; }
+#mhead .spacer { flex: 1; }
+
+#alarmbar {
+  flex: 0 0 auto; min-height: 24px; display: flex; align-items: center; gap: 12px;
+  padding: 2px 12px; font-weight: 700; letter-spacing: .04em; font-size: 13px;
+  background: #0c0e12; border-bottom: 1px solid var(--line); color: var(--dim);
+}
+#alarmbar .a { padding: 2px 10px; border-radius: 3px; }
+#alarmbar .a.p3 { background: var(--crit); color: #fff; }
+#alarmbar .a.p2 { background: var(--warn); color: #000; }
+@keyframes blink { 50% { opacity: .25; } }
+#alarmbar .a.p3 { animation: blink 1s steps(1) infinite; }
+
+#mbody { flex: 1; display: flex; min-height: 0; }
+#waves { flex: 1; position: relative; min-width: 0; background: #000; }
+#waves canvas { display: block; width: 100%; height: 100%; }
+.lanelab {
+  position: absolute; left: 8px; font-size: 12px; font-weight: 700;
+  letter-spacing: .05em; pointer-events: none; text-shadow: 0 0 6px #000, 0 0 3px #000;
+}
+.lanelab small { display: block; font-weight: 400; opacity: .7; letter-spacing: 0; }
+
+/* Beschriftung der mittleren Hilfslinie im Druckkanal */
+.gridlab {
+  position: absolute; left: 8px; font-size: 10.5px; font-weight: 600;
+  opacity: .62; pointer-events: none; text-shadow: 0 0 6px #000, 0 0 3px #000;
+}
+
+/* Malebene ueber den Kurven. Sie liegt nach den Kurven im Dokument und
+   deckt sie deshalb ab; angeklickt wird sie nur im Standbild. */
+#waves #draw {
+  position: absolute; inset: 0; pointer-events: none; touch-action: none;
+  cursor: crosshair;
+}
+/* Radierer: Kreis in der Groesse des Bereichs, der einen Strich erfasst */
+#waves #draw.erase {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Ccircle cx='11' cy='11' r='9' fill='rgba(255,255,255,.18)' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='11' cy='11' r='9' fill='none' stroke='%23fff' stroke-width='1.5'/%3E%3C/svg%3E") 11 11, cell;
+}
+
+#frozenTag {
+  position: absolute; left: 50%; top: 4px; transform: translateX(-50%);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .14em;
+  color: #0c0e12; background: var(--warn); padding: 2px 10px; border-radius: 3px;
+  pointer-events: none;
+}
+
+/* Werkzeugleiste, nur im Standbild sichtbar */
+/* Sie schwebt ueber dem unteren Rand der Kurvenflaeche und nimmt keinen
+   eigenen Platz ein: Beim Einfrieren verschiebt sich am Monitor nichts. */
+#drawbar {
+  position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 8;
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 5px 12px; background: rgba(21, 24, 30, .94); border: 1px solid #343b45;
+  border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.55);
+}
+#drawbar .dlab { font-size: 11px; color: var(--warn); margin-right: 4px; font-weight: 600; }
+#drawbar .dsep { width: 1px; height: 18px; background: #343b45; margin: 0 4px; }
+.dk {
+  padding: 4px 10px; font-size: 11.5px; font-family: inherit; cursor: pointer;
+  background: linear-gradient(#39414b, #262c34); color: #dfe4ea;
+  border: 1px solid #454e59; border-radius: 3px;
+}
+.dk:hover { background: linear-gradient(#444d58, #2e353e); }
+.dk.on { background: linear-gradient(#2f6fd6, #2558ae); border-color: #5b92e8; color: #fff; }
+.sw {
+  width: 22px; height: 22px; border-radius: 50%; cursor: pointer; padding: 0;
+  background: var(--sw); border: 1px solid #545c66;
+}
+.sw.on { box-shadow: 0 0 0 2px #0f1319, 0 0 0 4px #7fa6e8; }
+
+/* Rhythmusmeldung rechts über der EKG-Kurve, grün wie beim IntelliVue */
+#rhystat {
+  position: absolute; right: 10px; top: 4px; text-align: right;
+  pointer-events: none; font-size: 12.5px; font-weight: 600; line-height: 1.25;
+  color: #3fe05a; text-shadow: 0 0 6px #000, 0 0 3px #000;
+}
+#rhystat #rs-ect { font-weight: 400; opacity: .88; }
+
+#nums {
+  flex: 0 0 268px; display: flex; flex-direction: column; gap: 3px;
+  padding: 3px; background: #000; border-left: 1px solid #23272e;
+}
+.tile {
+  background: #0a0c10; border: 1px solid #1b2028; border-radius: 3px;
+  padding: 3px 10px 5px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.tile .tl { display: flex; align-items: baseline; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: .05em; }
+.tile .tl .unit { font-weight: 400; font-size: 11px; opacity: .65; }
+.tile .tl .lim { margin-left: auto; font-size: 10px; opacity: .55; font-weight: 400; }
+/* Die Zahlen wachsen mit der Fensterhoehe, damit sie auch auf kleinen
+   Schirmen noch in die Kachel passen. */
+.tile .val { font-size: clamp(26px, 7.2vh, 54px); line-height: 1; font-weight: 500; margin-top: 2px; }
+.tile .val.small { font-size: clamp(18px, 4.3vh, 32px); }
+#t-temp .val { font-size: clamp(20px, 4.8vh, 38px); }
+.tile .sub { font-size: 11px; opacity: .7; margin-top: 2px; min-height: 14px; }
+.tile.alarm { border-color: var(--crit); }
+.tile.alarm .val { animation: blink 1s steps(1) infinite; }
+
+#t-hr .val, #t-hr .tl { color: var(--ecg); }
+#t-spo2 .val, #t-spo2 .tl { color: var(--spo2); }
+#t-art .val, #t-art .tl { color: var(--art); }
+#t-cvp .val, #t-cvp .tl { color: var(--cvp); }
+#t-af .val, #t-af .tl { color: var(--af); }
+#t-temp .val, #t-temp .tl { color: var(--temp); }
+
+/* Funktionstasten am unteren Bildschirmrand */
+#softkeys {
+  flex: 0 0 auto; display: flex; gap: 2px; padding: 3px;
+  background: #0f1319; border-top: 1px solid #23272e;
+}
+.sk {
+  flex: 1; min-width: 0; padding: 5px 4px; font-size: 11px; line-height: 1.25;
+  background: linear-gradient(#39414b, #262c34); color: #dfe4ea;
+  border: 1px solid #454e59; border-radius: 3px; cursor: pointer;
+  font-family: inherit; text-align: center;
+}
+.sk:hover { background: linear-gradient(#444d58, #2e353e); }
+.sk.on { background: linear-gradient(#2f6fd6, #2558ae); border-color: #5b92e8; color: #fff; }
+
+#noconn {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.82); font-size: 15px; color: var(--dim); text-align: center; padding: 30px;
+}
+
+/* --------- Medikamente: Spritzenaufkleber nach ISO 26825 / DIVI ---------
+   Die Etiketten werden in Steuerung und Monitor gleich gezeichnet.
+   --c ist die Kennfarbe der Wirkstoffgruppe, --c2 die zweite Farbe der
+   diagonal geteilten DIVI-Gruppen. */
+
+.medlab {
+  position: relative; display: inline-block; border-radius: 2px;
+  background: var(--c); line-height: 1.15;
+}
+.medlab .inner {
+  position: relative; z-index: 1; display: flex; flex-direction: column;
+  justify-content: center; min-width: 92px; padding: 3px 7px;
+  color: #000; border-radius: 1px;
+}
+.medlab .nm { font-size: 11.5px; font-weight: 700; letter-spacing: .01em; white-space: nowrap; }
+.medlab .ds { font-size: 9.5px; opacity: .78; font-variant-numeric: tabular-nums; }
+
+/* Ausnahme Adrenalin nach ISO 26825: obere Haelfte schwarz, Schrift in der
+   Kennfarbe. */
+.medlab.s-epi { background: linear-gradient(#000 0 50%, var(--c) 50% 100%); }
+.medlab.s-epi .nm { color: var(--c); }
+
+/* Vasodilatatoren/Antihypertonika: weisser Grund, Randschraffur in der
+   Kennfarbe. Relaxansantagonisten zusaetzlich mit schwarzem Querbalken. */
+.medlab.s-hatch, .medlab.s-bar {
+  padding: 3px;
+  background: repeating-linear-gradient(135deg, var(--c) 0 3px, #fff 3px 7px);
+}
+.medlab.s-hatch .inner, .medlab.s-bar .inner { background: #fff; }
+.medlab.s-bar::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  height: 3px; margin-top: -1.5px; background: #000; z-index: 0;
+}
+
+/* DIVI-Gruppen: zwei Farbfelder, col[0] links unten, col[1] rechts oben. */
+.medlab.s-diag {
+  background: linear-gradient(to top right, var(--c) 0 49.4%, var(--c2) 50.6% 100%);
+}
+.medlab.s-diag .inner { color: #fff; }
+.medlab.s-diag .ds { opacity: .9; }
+
+/* Defibrillation ist kein Medikament und bekommt deshalb kein ISO-Etikett,
+   sondern eine klar davon unterscheidbare Marke. */
+.medlab.s-defi { background: #15171b; border: 1px solid var(--warn); }
+.medlab.s-defi .inner { color: var(--warn); }
+.medlab.s-defi .ds { opacity: .85; }
+
+/* Medikationszeile am Monitor */
+#medbar {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 10px;
+  padding: 4px 10px; background: #0c0e12; border-top: 1px solid #23272e;
+  min-height: 34px;
+}
+#medbar .mbhead {
+  display: flex; align-items: center; gap: 6px; flex: 0 0 auto;
+  font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--temp);
+}
+#medbar .mbitems { display: flex; align-items: center; gap: 8px; overflow-x: auto; min-width: 0; }
+svg.syr { width: 26px; height: 13px; flex: 0 0 auto; }
+
+.medgiv { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.medgiv .mt { display: flex; flex-direction: column; font-size: 10px; line-height: 1.2; }
+.medgiv .mt b { font-weight: 600; color: var(--txt); font-variant-numeric: tabular-nums; }
+.medgiv .mt i { font-style: normal; color: var(--dim); font-variant-numeric: tabular-nums; }
+@keyframes medpulse { 50% { box-shadow: 0 0 0 2px var(--temp); } }
+.medgiv.fresh .medlab { animation: medpulse .9s ease-in-out 10; }
+
+/* ---------------- Steuerung ---------------- */
+
+#control { display: flex; flex-direction: column; height: 100%; background: #0f1216; overflow: hidden; }
+#chead {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 14px; background: #171b21; border-bottom: 1px solid var(--line);
+}
+#chead h1 { font-size: 15px; margin: 0 10px 0 0; font-weight: 700; letter-spacing: .02em; }
+#chead .spacer { flex: 1; }
+#link { font-size: 12px; color: var(--dim); }
+#link.ok { color: var(--ecg); }
+
+#cbody { flex: 1; display: flex; min-height: 0; }
+#cleft { flex: 1.3; overflow-y: auto; padding: 12px 14px 40px; min-width: 0; }
+#cright { flex: 1; overflow-y: auto; padding: 12px 14px 40px; border-left: 1px solid var(--line); background: #0c0f13; min-width: 0; }
+
+h2.sec {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim);
+  margin: 18px 0 8px; font-weight: 700;
+}
+h2.sec:first-child { margin-top: 0; }
+h2.sec span { text-transform: none; letter-spacing: 0; font-weight: 400; opacity: .65; margin-left: 8px; }
+
+/* Der Rhythmusbereich steht unten und ist zugeklappt: im Unterricht fuehrt
+   das Szenario, der einzelne Rhythmus ist der Sonderfall. */
+#rhythmDet { margin: 22px 0 0; border-top: 1px solid var(--line); padding-top: 10px; }
+#rhythmDet > summary {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim);
+  font-weight: 700; cursor: pointer; list-style: none; padding: 4px 0;
+}
+#rhythmDet > summary::-webkit-details-marker { display: none; }
+#rhythmDet > summary::before {
+  content: '\25B8'; display: inline-block; margin-right: 7px; transition: transform .12s;
+}
+#rhythmDet[open] > summary::before { transform: rotate(90deg); }
+#rhythmDet > summary:hover { color: var(--txt); }
+#rhythmDet > summary span {
+  text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--txt);
+  margin-left: 8px; opacity: .9;
+}
+.hint { font-size: 12px; color: var(--dim); margin: 6px 0 2px; line-height: 1.45; }
+
+.btnrow { display: flex; flex-wrap: wrap; gap: 6px; }
+button.b {
+  background: #1b2029; color: var(--txt); border: 1px solid #262c36; border-radius: 7px;
+  padding: 8px 11px; font-size: 13px; cursor: pointer; text-align: left;
+}
+button.b:hover { background: #242b36; }
+button.b.active { background: #2d6cdf; border-color: #4b86ef; color: #fff; font-weight: 600; }
+button.b.crit.active { background: var(--crit); border-color: #ff6a60; }
+button.b.wide { flex: 1 1 150px; }
+
+/* Medikamententaste: Etikett oben, Wirkung darunter */
+button.b.med { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; padding: 7px 8px; }
+button.b.med .medeff { font-size: 10.5px; color: var(--dim); letter-spacing: .01em; }
+button.b.med:hover .medeff { color: var(--txt); }
+.medgrp {
+  font-size: 11px; color: var(--dim); margin: 12px 0 5px;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.medgrp span { text-transform: none; letter-spacing: 0; opacity: .6; }
+
+#medGivenWrap { margin-top: 12px; padding: 8px 10px; background: #11161d; border: 1px solid #1f2630; border-radius: 7px; }
+#medGivenWrap .lbl {
+  display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--dim);
+  letter-spacing: .08em; text-transform: uppercase; margin-bottom: 7px;
+}
+#medGivenWrap .lbl span { text-transform: none; letter-spacing: 0; opacity: .7; }
+#medGivenWrap .lbl button { margin-left: auto; padding: 4px 9px; font-size: 11px; }
+#medGiven { display: flex; flex-wrap: wrap; gap: 10px; }
+#medGiven .none { font-size: 12px; color: var(--dim); }
+
+.defi { padding: 10px; background: #11161d; border: 1px solid #1f2630; border-radius: 7px; }
+.defi .lbl {
+  font-size: 11px; color: var(--dim); letter-spacing: .08em;
+  text-transform: uppercase; margin: 0 0 6px;
+}
+.defi .btnrow + .lbl { margin-top: 12px; }
+button.b.shock {
+  background: #7d1912; border-color: #a8392c; color: #ffe9e6; font-weight: 600;
+  flex: 1 1 100%; text-align: center; padding: 11px;
+}
+button.b.shock:hover { background: #99201a; }
+
+.slider { margin: 10px 0 14px; }
+.slider .top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.slider .name { font-size: 13px; }
+.slider .v { margin-left: auto; font-size: 20px; font-weight: 600; }
+.slider .u { font-size: 11px; color: var(--dim); }
+.slider .ctl { display: flex; align-items: center; gap: 8px; }
+.slider input[type=range] { flex: 1; accent-color: #2d6cdf; height: 26px; }
+.slider button {
+  width: 34px; height: 30px; border-radius: 6px; border: 1px solid #262c36;
+  background: #1b2029; color: var(--txt); font-size: 17px; cursor: pointer; line-height: 1;
+}
+.slider.hr .v { color: var(--ecg); }
+.slider.spo2 .v { color: var(--spo2); }
+.slider.sys .v, .slider.dia .v { color: var(--art); }
+.slider.cvp .v { color: var(--cvp); }
+.slider.af .v { color: var(--af); }
+.slider.vaso .v { color: var(--art); }
+.slider.ppv .v { color: var(--art); }
+.slider.qtf .v { color: var(--ecg); }
+
+/* Zeile unter den Istwerten: Text, den der Monitor am EKG anzeigt */
+#lvstat {
+  margin-top: 6px; padding: 5px 8px; border-radius: 6px;
+  background: #11161d; border: 1px solid #1f2630;
+  font-size: 12px; color: #3fe05a; letter-spacing: .02em;
+}
+
+select.b {
+  background: #1b2029; color: var(--txt); border: 1px solid #262c36;
+  border-radius: 7px; padding: 8px 10px; font-size: 13px;
+}
+
+#preview { width: 100%; height: 96px; background: #000; border: 1px solid #1a1f27; border-radius: 7px; display: block; }
+
+#live { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 8px; }
+#live div { background: #11151a; border: 1px solid #1a1f27; border-radius: 6px; padding: 6px 8px; }
+#live .k { font-size: 10px; color: var(--dim); letter-spacing: .06em; }
+#live .n { font-size: 22px; font-weight: 600; }
+
+#log { font-size: 12px; color: var(--dim); max-height: 190px; overflow-y: auto; margin-top: 6px; }
+#log div { padding: 2px 0; border-bottom: 1px solid #171b21; }
+#log b { color: var(--txt); font-weight: 600; }
+
+/* ---------------- schmale Fenster ---------------- */
+@media (max-width: 1100px) {
+  #nums { flex-basis: 210px; }
+  .tile .val { font-size: 40px; }
+  .tile .val.small { font-size: 23px; }
+}
+@media (max-width: 820px) {
+  #nums { flex-basis: 150px; }
+  .tile .val { font-size: 30px; }
+  .tile .val.small { font-size: 16px; }
+  .tile .tl .lim { display: none; }
+  #cbody { flex-direction: column; }
+  #cright { border-left: none; border-top: 1px solid var(--line); }
+}
+
+/* ---------------- Gerätefronten über dem Monitor ----------------
+   Grundlage sind die Herstellerabbildungen selbst (freigestellt und an den
+   Wertefeldern leergeräumt). Darüber liegen die Felder des Simulators, in
+   Prozent der Bildgröße positioniert – damit sitzt alles bei jeder Größe an
+   derselben Stelle. 1em entspricht 10 Bildpunkten des Originals; die
+   Schriftgröße des Geräts wird beim Öffnen passend gesetzt. */
+
+#devOverlay {
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.84); z-index: 60; padding: 12px;
+}
+.devSheet {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  max-height: 100%; min-height: 0;
+}
+.devNote {
+  font-size: 11.5px; line-height: 1.35; color: #9aa0a8; max-width: 680px; text-align: center;
+}
+.devNote.flash { color: var(--warn); }
+.devNote.warn { color: #ff7b6b; font-weight: 600; }
+.devBtns button {
+  background: #20252d; color: var(--txt); border: 1px solid var(--line);
+  border-radius: 6px; padding: 6px 16px; font-size: 13px; cursor: pointer; font-family: inherit;
+}
+.devBtns button:hover { background: #2b313b; }
+
+.devimg {
+  position: relative; display: block; line-height: 0; flex: 0 0 auto;
+  filter: drop-shadow(0 16px 38px rgba(0,0,0,.65));
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.devimg .base { display: block; width: 100%; height: auto; -webkit-user-drag: none; user-select: none; }
+.devimg .ov { position: absolute; line-height: 1; pointer-events: none; }
+.devimg .hot {
+  position: absolute; background: none; border: 0; padding: 0; cursor: pointer;
+  border-radius: 3px; -webkit-tap-highlight-color: transparent;
+}
+.devimg .hot.rnd { border-radius: 50%; }
+.devimg .hot:hover { background: rgba(255,255,255,.2); box-shadow: 0 0 0 2px rgba(255,255,255,.4); }
+.devimg .knob { cursor: ns-resize; touch-action: none; }
+
+/* ---- corpuls1: Zahlen, Kurven, weiche Tasten ---- */
+
+#devCorpuls .ov.num {
+  display: flex; align-items: flex-end; justify-content: flex-end;
+  font-size: 5.1em; font-weight: 500; letter-spacing: -.02em; padding-bottom: .12em;
+}
+#devCorpuls .ov.num.hr { color: #000; }
+#devCorpuls .ov.num.bl { color: #00348d; }
+#devCorpuls .ov.t {
+  display: flex; align-items: center; justify-content: flex-start;
+  font-size: 1.95em; color: #16181c; font-weight: 500;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+#devCorpuls canvas.ov { background: #fff; }
+#devCorpuls .ov.softbar { display: flex; background: #0031a1; pointer-events: none; }
+#devCorpuls .ov.softbar .c {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1.5em; font-weight: 700; letter-spacing: .01em;
+}
+#devCorpuls .ov.softbar .c.on { background: #fff; color: #0031a1; }
+#devCorpuls .ov.chg {
+  display: flex; align-items: center; justify-content: center; border-radius: 2px;
+  font-size: 1.65em; font-weight: 700; letter-spacing: .04em;
+}
+#devCorpuls .ov.chg.busy { background: #e8a400; color: #1a1405; }
+#devCorpuls .ov.chg.ready { background: #d8232a; color: #fff; }
+#devCorpuls .hot.armed { animation: shockpulse .8s steps(1) infinite; }
+@keyframes shockpulse { 50% { box-shadow: 0 0 0 5px rgba(216,35,42,.65); } }
+
+/* ---- PACE 203H: Siebensegment, Modus, Menüpunkte ---- */
+
+#devPacer .ov.seg svg { display: block; width: 100%; height: 100%; }
+#devPacer .ov.mode { display: flex; align-items: center; }
+#devPacer .ov.mode img { height: 100%; width: auto; display: block; }
+#devPacer .ov.dot { border-radius: 50%; }
+#devPacer .ov.dot.on::after {
+  content: ''; position: absolute; inset: 26%; border-radius: 50%; background: #15171b;
+}
+#devPacer .ov.heart { opacity: 0; transition: opacity .05s; }
+#devPacer .ov.heart.on { opacity: 1; }
+#devPacer .ov.heart svg { width: 100%; height: 100%; fill: #15171b; }
+#devPacer.standby .base { filter: saturate(.7) brightness(1.02); }
+
+/* ---------------- BGA-Ausdruck (Radiometer ABL800 FLEX) ---------------- */
+
+#bgaOverlay {
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.72); z-index: 50; padding: 20px;
+}
+.bgaSheet { display: flex; flex-direction: column; align-items: center; gap: 10px; max-height: 100%; min-height: 0; }
+.bgaBtns { display: flex; gap: 8px; }
+.bgaBtns button {
+  background: #20252d; color: var(--txt); border: 1px solid var(--line);
+  border-radius: 6px; padding: 7px 16px; font-size: 13px; cursor: pointer; font-family: inherit;
+}
+.bgaBtns button:hover { background: #2b313b; }
+
+.paper {
+  width: 400px; max-width: 100%; overflow-y: auto; min-height: 0; flex: 0 1 auto;
+  background: #fbfbf9; color: #15151a;
+  padding: 22px 26px 26px; border-radius: 2px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.55);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12.5px; line-height: 1.5;
+  /* angerissene Oberkante wie beim Thermodrucker */
+  -webkit-mask-image: linear-gradient(#000 0 0);
+}
+.paper .ttl {
+  font-family: "Times New Roman", Georgia, serif; font-weight: 700;
+  font-size: 17px; text-align: center; letter-spacing: .01em; margin-bottom: 14px;
+}
+.paper .meta { display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; }
+.paper .meta.foot { margin-top: 2px; justify-content: flex-start; gap: 18px; }
+.paper hr { border: 0; border-top: 1px solid #15151a; margin: 7px 0; }
+.paper hr.dash { border-top: 1px dashed #8a8a8a; }
+.paper .h { font-weight: 600; margin: 9px 0 2px; }
+.paper .r { display: flex; align-items: baseline; padding-left: 16px; }
+.paper .r .l { flex: 0 0 170px; }
+.paper .r .l i { font-style: italic; }
+.paper .r .l sub { font-size: 9px; vertical-align: baseline; position: relative; top: 2px; }
+.paper .r .v { flex: 0 0 70px; text-align: right; padding-right: 16px; }
+.paper .r .v2 { flex: 1; }
+.paper .r .u { flex: 1; color: #15151a; }
+
+@media print {
+  body { background: #fff !important; }
+  body > *:not(#bgaOverlay) { display: none !important; }
+  #bgaOverlay { position: static; display: block !important; background: none; padding: 0; }
+  .bgaBtns { display: none; }
+  .paper { box-shadow: none; width: 100%; max-width: 80mm; overflow: visible; padding: 0; }
+}
+
+/* Dateistand im Kopf der Steuerung: zeigt sofort, ob der Browser noch eine
+   alte, zwischengespeicherte Fassung anzeigt. */
+#build {
+  font-size: 11px; color: var(--dim); letter-spacing: .03em;
+  padding: 2px 7px; border: 1px solid #1f2630; border-radius: 10px;
+}
+
+/* Zyklus nach dem Schock und Warnung vor der Entgleisung */
+#cprCycle {
+  margin-top: 10px; padding: 8px 10px; border-radius: 7px; font-size: 13px;
+  background: #1d1a10; border: 1px solid #5c4a14; color: #f0d98a;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+#cprCycle b { font-size: 16px; color: #ffe27a; }
+#cprCycle .b { margin-left: auto; padding: 5px 10px; font-size: 12px; }
+#decompNote {
+  margin-top: 6px; padding: 7px 10px; border-radius: 7px; font-size: 13px; font-weight: 600;
+  background: #2a1214; border: 1px solid #7a2a30; color: #ff9aa0;
+}
+
+/* ---------------- 12-Kanal-EKG ---------------- */
+
+#ekgOverlay {
+  position: fixed; inset: 0; display: none; align-items: stretch; justify-content: center;
+  background: rgba(9,11,15,.96); z-index: 60; padding: 10px;
+}
+.ekgSheet { display: flex; flex-direction: column; gap: 8px; width: 100%; min-width: 0; min-height: 0; }
+.ekgBar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.ekgBar .ekgTtl { color: #e8ecf2; font-weight: 700; font-size: 14px; letter-spacing: .04em; margin-right: 8px; }
+.ekgBar .ekgSp { flex: 1 1 auto; }
+.ekgBar button {
+  background: #20252d; color: #e8ecf2; border: 1px solid #3a424e;
+  border-radius: 6px; padding: 7px 14px; font-size: 13px; cursor: pointer; font-family: inherit;
+}
+.ekgBar button:hover { background: #2b313b; }
+.ekgBar button.on { background: #2f6fd6; border-color: #5b92e8; color: #fff; }
+.ekgPaper {
+  flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.ekgPaper canvas { box-shadow: 0 14px 40px rgba(0,0,0,.6); border-radius: 2px; background: #fffaf7; }
+#cleft > .lbl {
+  font-size: 11px; color: var(--dim); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px;
+}
